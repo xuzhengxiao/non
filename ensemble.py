@@ -68,3 +68,39 @@ class StackingAveragedModels(BaseEstimator, RegressorMixin, TransformerMixin):
 stacked_averaged_models = StackingAveragedModels(base_models = (ENet, GBoost, KRR),
                                                  meta_model = lasso)
 score = rmsle_cv(stacked_averaged_models)
+
+
+def rmsle(y, y_pred):
+    return np.sqrt(mean_squared_error(y, y_pred))
+
+#Final Training and Prediction
+stacked_averaged_models.fit(train.values, y_train)
+stacked_train_pred = stacked_averaged_models.predict(train.values)
+stacked_pred = np.expm1(stacked_averaged_models.predict(test.values))
+print(rmsle(y_train, stacked_train_pred))
+
+model_xgb = xgb.XGBRegressor(colsample_bytree=0.4603, gamma=0.0468, 
+                             learning_rate=0.05, max_depth=3, 
+                             min_child_weight=1.7817, n_estimators=2200,
+                             reg_alpha=0.4640, reg_lambda=0.8571,
+                             subsample=0.5213, silent=1,
+                             random_state =7, nthread = -1)
+
+model_xgb.fit(train, y_train)
+xgb_train_pred = model_xgb.predict(train)
+xgb_pred = np.expm1(model_xgb.predict(test))
+print(rmsle(y_train, xgb_train_pred))
+
+model_lgb = lgb.LGBMRegressor(objective='regression',num_leaves=5,
+                              learning_rate=0.05, n_estimators=720,
+                              max_bin = 55, bagging_fraction = 0.8,
+                              bagging_freq = 5, feature_fraction = 0.2319,
+                              feature_fraction_seed=9, bagging_seed=9,
+                              min_data_in_leaf =6, min_sum_hessian_in_leaf = 11)
+model_lgb.fit(train, y_train)
+lgb_train_pred = model_lgb.predict(train)
+lgb_pred = np.expm1(model_lgb.predict(test.values))
+print(rmsle(y_train, lgb_train_pred))
+
+#Ensemble prediction:
+ensemble = stacked_pred*0.70 + xgb_pred*0.15 + lgb_pred*0.15
