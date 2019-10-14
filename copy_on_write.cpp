@@ -1,3 +1,8 @@
+class Foo
+{
+public:
+    void doit() const;
+};
 
 typedef vector<Foo> FooList;
 typedef shared_ptr<FooList> FooListPtr;
